@@ -57,4 +57,43 @@ KvsSinkStreamCallbackProvider::streamClosedHandler(UINT64 custom_data,
     return STATUS_SUCCESS;
 }
 
+STATUS KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler(UINT64 custom_data,
+                                  STREAM_HANDLE stream_handle,
+                                  UPLOAD_HANDLE upload_handle,
+                                  PFragmentAck fragment_ack) {
+    LOG_INFO("KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler")
+    KvsSinkCustomData* customDataObj = reinterpret_cast<KvsSinkCustomData*>(custom_data);
+    g_signal_emit(G_OBJECT(customDataObj->kvsSink),
+                  customDataObj->kvs_sink_signals[SIGNAL_ON_FIRST_FRAGMENT],
+                  0,
+                  "abc",
+                  "def");
+    return STATUS_SUCCESS;
+}
 
+STATUS KvsSinkStreamCallbackProvider::droppedFragmentReportHandler(UINT64 custom_data,
+                                           STREAM_HANDLE stream_handle,
+                                           UINT64 timecode) {
+    LOG_INFO("KvsSinkStreamCallbackProvider::droppedFragmentReportHandler")
+    return STATUS_SUCCESS;
+}
+
+STATUS KvsSinkStreamCallbackProvider::streamDataAvailableHandler(UINT64 custom_data,
+                                         STREAM_HANDLE stream_handle,
+                                         PCHAR stream_name,
+                                         UPLOAD_HANDLE stream_upload_handle,
+                                         UINT64 duration_available,
+                                         UINT64 size_available) {
+    LOG_INFO("KvsSinkStreamCallbackProvider::streamDataAvailableHandler")
+    return STATUS_SUCCESS;
+}
+
+STATUS KvsSinkStreamCallbackProvider::streamReadyHandler(UINT64 custom_data, STREAM_HANDLE stream_handle) {
+    LOG_INFO("KvsSinkStreamCallbackProvider::streamReadyHandler")
+    return STATUS_SUCCESS;
+}
+
+STATUS KvsSinkStreamCallbackProvider::streamUnderflowReportHandler(UINT64 custom_data, STREAM_HANDLE stream_handle) {
+    LOG_INFO("KvsSinkStreamCallbackProvider::streamUnderflowReportHandler")
+    return STATUS_SUCCESS;
+}

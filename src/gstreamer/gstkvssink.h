@@ -76,6 +76,12 @@ typedef enum _MediaType {
     AUDIO_ONLY
 } MediaType;
 
+enum {
+    SIGNAL_ON_FIRST_FRAGMENT = 0,
+    SIGNAL_ON_EOS,
+    LAST_SIGNAL
+};
+
 /**
  * GstKvsSink:
  *
@@ -165,6 +171,7 @@ struct _KvsSinkCustomData {
     uint64_t pts_base;
     uint64_t first_pts;
     uint64_t producer_start_time;
+    guint *kvs_sink_signals;
 };
 
 #endif /* __GST_KVS_SINK_H__ */

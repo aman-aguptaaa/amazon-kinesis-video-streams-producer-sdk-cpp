@@ -232,6 +232,8 @@ static GstPad* gst_kvs_sink_request_new_pad (GstElement *element, GstPadTemplate
                                              const gchar* name, const GstCaps *caps);
 static void gst_kvs_sink_release_pad (GstElement *element, GstPad *pad);
 
+static guint kvs_sink_signals_[LAST_SIGNAL] = { 0 };
+
 void kinesis_video_producer_init(GstKvsSink *kvssink)
 {
     auto data = kvssink->data;
@@ -576,6 +578,18 @@ gst_kvs_sink_class_init(GstKvsSinkClass *klass) {
                                                            "Set to true only if your src/mux elements produce GST_CLOCK_TIME_NONE for segment start times.  It is non-standard behavior to set this to true, only use if there are known issues with your src/mux segment start/stop times.", DEFAULT_DISABLE_BUFFER_CLIPPING,
                                                            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    kvs_sink_signals_[SIGNAL_ON_FIRST_FRAGMENT] = g_signal_new("on-first-fragment",
+                                                             G_TYPE_FROM_CLASS(klass),
+                                                             G_SIGNAL_RUN_LAST, // see if this parameter is to be set
+                                                             0,
+                                                             NULL,
+                                                             NULL,
+                                                             NULL,
+                                                             G_TYPE_NONE,
+                                                             2,
+                                                             G_TYPE_STRING,
+                                                             G_TYPE_STRING);
+
     gst_element_class_set_static_metadata(gstelement_class,
                                           "KVS Sink",
                                           "Sink/Video/Network",
@@ -637,6 +651,12 @@ gst_kvs_sink_init(GstKvsSink *kvssink) {
     kvssink->audio_codec_id = g_strdup (DEFAULT_AUDIO_CODEC_ID_AAC);
 
     kvssink->data = make_shared<KvsSinkCustomData>();
+
+    LOG_INFO("reached pre installing signal");
+
+    kvssink->data->kvsSink = kvssink;
+    kvssink->data->kvs_sink_signals = kvs_sink_signals_;
+    LOG_INFO("reached post installing signal");
 
     // Mark plugin as sink
     GST_OBJECT_FLAG_SET (kvssink, GST_ELEMENT_FLAG_SINK);

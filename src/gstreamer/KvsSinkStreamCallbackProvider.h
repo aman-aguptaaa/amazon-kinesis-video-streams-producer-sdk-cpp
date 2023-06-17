@@ -34,6 +34,26 @@ namespace com { namespace amazonaws { namespace kinesis { namespace video {
             return streamClosedHandler;
         }
 
+        FragmentAckReceivedFunc getFragmentAckReceivedCallback() override {
+            return fragmentAckReceivedHandler;
+        }
+
+        DroppedFragmentReportFunc getDroppedFragmentReportCallback() override {
+            return droppedFragmentReportHandler;
+        }
+
+        StreamDataAvailableFunc getStreamDataAvailableCallback() override {
+            return streamDataAvailableHandler;
+        }
+
+        StreamReadyFunc getStreamReadyCallback() override {
+            return streamReadyHandler;
+        }
+
+        StreamUnderflowReportFunc getStreamUnderflowReportCallback() override {
+            return streamUnderflowReportHandler;
+        }
+
     private:
         static STATUS
         streamConnectionStaleHandler(UINT64 custom_data, STREAM_HANDLE stream_handle,
@@ -53,6 +73,26 @@ namespace com { namespace amazonaws { namespace kinesis { namespace video {
 
         static STATUS
         streamClosedHandler(UINT64 custom_data, STREAM_HANDLE stream_handle, UPLOAD_HANDLE upload_handle);
+
+        static STATUS fragmentAckReceivedHandler(UINT64 custom_data,
+                                                 STREAM_HANDLE stream_handle,
+                                                 UPLOAD_HANDLE upload_handle,
+                                                 PFragmentAck fragment_ack);
+
+        static STATUS droppedFragmentReportHandler(UINT64 custom_data,
+                                                   STREAM_HANDLE stream_handle,
+                                                   UINT64 timecode);
+
+        static STATUS streamDataAvailableHandler(UINT64 custom_data,
+                                                 STREAM_HANDLE stream_handle,
+                                                 PCHAR stream_name,
+                                                 UPLOAD_HANDLE stream_upload_handle,
+                                                 UINT64 duration_available,
+                                                 UINT64 size_available);
+
+        static STATUS streamReadyHandler(UINT64 custom_data, STREAM_HANDLE stream_handle);
+
+        static STATUS streamUnderflowReportHandler(UINT64 custom_data, STREAM_HANDLE stream_handle);
     };
 }
 }
