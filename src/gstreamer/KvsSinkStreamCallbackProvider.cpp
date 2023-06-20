@@ -67,7 +67,7 @@ STATUS KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler(UINT64 custom_d
     LOG_INFO("Reporting fragment ack received. Ack timecode " << fragment_ack->timestamp << "fragment_ack_type is " << fragment_ack->ackType);
     LOG_INFO("Other details of pFragmentAck -  SequenceNumber - " << fragment_ack->sequenceNumber << " timestamp - " << fragment_ack->timestamp);
     LOG_INFO("Yet another detail of pFragmentAck -  version - " << fragment_ack->version << " result - " << fragment_ack->result);
-
+    LOG_INFO("Sending fragment number inside gstreamer signal");
     g_signal_emit(G_OBJECT(customDataObj->kvsSink),
                   customDataObj->kvs_sink_signals[SIGNAL_ON_FIRST_FRAGMENT],
                   0,
