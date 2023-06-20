@@ -71,8 +71,8 @@ STATUS KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler(UINT64 custom_d
     g_signal_emit(G_OBJECT(customDataObj->kvsSink),
                   customDataObj->kvs_sink_signals[SIGNAL_ON_FIRST_FRAGMENT],
                   0,
-                  "abc",
-                  "def");
+                  fragment_ack->sequenceNumber,
+                  fragment_ack->timestamp);
     return STATUS_SUCCESS;
 }
 

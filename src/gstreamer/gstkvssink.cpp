@@ -1083,7 +1083,7 @@ gst_kvs_sink_handle_buffer (GstCollectPads * pads,
 
     // eos reached
     if (buf == NULL && track_data == NULL) {
-        data->kinesis_video_stream->stop();
+        data->kinesis_video_stream->stopSync();
         LOG_INFO("Sending eos");
 
         // send out eos message to gstreamer bus
