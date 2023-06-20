@@ -72,7 +72,7 @@ STATUS KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler(UINT64 custom_d
                   customDataObj->kvs_sink_signals[SIGNAL_ON_FIRST_FRAGMENT],
                   0,
                   fragment_ack->sequenceNumber,
-                  fragment_ack->timestamp);
+                  "1234");
     return STATUS_SUCCESS;
 }
 
