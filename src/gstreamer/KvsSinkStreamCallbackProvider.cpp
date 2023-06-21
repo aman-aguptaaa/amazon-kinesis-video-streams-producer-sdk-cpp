@@ -19,7 +19,8 @@ KvsSinkStreamCallbackProvider::streamErrorReportHandler(UINT64 custom_data,
                                                         UPLOAD_HANDLE upload_handle,
                                                         UINT64 errored_timecode,
                                                         STATUS status_code) {
-    LOG_ERROR("Reported stream error. Errored timecode: " << errored_timecode << " Status: 0x" << std::hex << status_code);
+    LOG_ERROR("Reported stream error. Errored timecode: " << errored_timecode << " Status: 0x" << std::hex << status_code); // called with 0x52000049 -> STATUS_INVALID_TOKEN_EXPIRATION 	Invalid security token expiration. 	The security token expiration should have an absolute timestamp in the future that's greater than the current timestamp, with a grace period
+    // first called on 00:05:13:074.396
     auto customDataObj = reinterpret_cast<KvsSinkCustomData*>(custom_data);
 
     // ignore if the sdk can recover from the error
@@ -34,6 +35,8 @@ STATUS
 KvsSinkStreamCallbackProvider::droppedFrameReportHandler(UINT64 custom_data,
                                                          STREAM_HANDLE stream_handle,
                                                          UINT64 dropped_frame_timecode) {
+    // this is called in case of no permissions
+    //[21-06-2023 00:05:13:474.847 GMT] Reported droppedFrame callback for stream handle 140398523724768
     UNUSED_PARAM(custom_data);
     LOG_WARN("Reported droppedFrame callback for stream handle " << stream_handle << ". Dropped frame timecode in 100ns: " << dropped_frame_timecode);
     return STATUS_SUCCESS; // continue streaming
@@ -44,7 +47,7 @@ KvsSinkStreamCallbackProvider::streamLatencyPressureHandler(UINT64 custom_data,
                                                             STREAM_HANDLE stream_handle,
                                                             UINT64 current_buffer_duration) {
     UNUSED_PARAM(custom_data);
-    LOG_DEBUG("Reported streamLatencyPressure callback for stream handle " << stream_handle << ". Current buffer duration in 100ns: " << current_buffer_duration);
+    LOG_DEBUG("Reported streamLatencyPressure callback for stream handle " << stream_handle << ". Current buffer duration in 100ns: " << current_buffer_duration); // this is being called in case of permissions
     return STATUS_SUCCESS;
 }
 
