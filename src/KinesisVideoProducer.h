@@ -35,6 +35,8 @@ namespace com { namespace amazonaws { namespace kinesis { namespace video {
  **/
 #define STREAM_READY_TIMEOUT_DURATION_IN_SECONDS 30
 
+#define CONTROL_PLANE_URI_ENV_VAR ((PCHAR) "CONTROL_PLANE_URI")
+
 /**
  * Default time in millis to await for the client callback to finish before proceeding with unlocking
  * We will add extra 10 milliseconds to account for thread scheduling to ensure the callback is complete.
