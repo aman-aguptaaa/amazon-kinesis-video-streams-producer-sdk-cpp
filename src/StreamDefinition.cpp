@@ -72,7 +72,6 @@ namespace com { namespace amazonaws { namespace kinesis { namespace video {
                     stream_info_.streamCaps.fragmentAcks = fragment_acks;
                     stream_info_.streamCaps.recoverOnError = restart_on_error;
                     stream_info_.streamCaps.recalculateMetrics = recalculate_metrics;
-                    stream_info_.streamCaps.allowStreamCreation = allowStreamCreation;
                     stream_info_.streamCaps.nalAdaptationFlags = nal_adaptation_flags;
                     stream_info_.streamCaps.frameRate = frame_rate;
                     stream_info_.streamCaps.avgBandwidthBps = avg_bandwidth_bps;
