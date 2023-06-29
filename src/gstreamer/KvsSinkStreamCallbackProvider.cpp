@@ -5,6 +5,17 @@ LOGGER_TAG("com.amazonaws.kinesis.video.gstkvs");
 using namespace com::amazonaws::kinesis::video;
 
 STATUS
+KvsSinkStreamCallbackProvider::bufferDurationOverflowPressureHandler(UINT64 custom_data, STREAM_HANDLE stream_handle, UINT64 remainDuration) {
+    UNUSED_PARAM(custom_data);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+KvsSinkStreamCallbackProvider::streamUnderflowReportHandler(UINT64 custom_data, STREAM_HANDLE stream_handle) {
+    return STATUS_SUCCESS;
+}
+
+STATUS
 KvsSinkStreamCallbackProvider::streamConnectionStaleHandler(UINT64 custom_data,
                                                             STREAM_HANDLE stream_handle,
                                                             UINT64 time_since_last_buffering_ack) {
@@ -19,15 +30,17 @@ KvsSinkStreamCallbackProvider::streamErrorReportHandler(UINT64 custom_data,
                                                         UPLOAD_HANDLE upload_handle,
                                                         UINT64 errored_timecode,
                                                         STATUS status_code) {
-    LOG_ERROR("Reported stream error. Errored timecode: " << errored_timecode << " Status: 0x" << std::hex << status_code); // called with 0x52000049 -> STATUS_INVALID_TOKEN_EXPIRATION 	Invalid security token expiration. 	The security token expiration should have an absolute timestamp in the future that's greater than the current timestamp, with a grace period
-    // first called on 00:05:13:074.396
     auto customDataObj = reinterpret_cast<KvsSinkCustomData*>(custom_data);
 
-    // ignore if the sdk can recover from the error
-    if (!IS_RECOVERABLE_ERROR(status_code)) {
-        customDataObj->stream_status = status_code;
-    }
 
+    if(customDataObj != NULL) {
+        LOG_ERROR("Reported stream error. Errored timecode: " << errored_timecode << " Status: 0x" << std::hex << status_code << " for " << customDataObj->kvsSink->stream_name);
+        // ignore if the sdk can recover from the error
+        if (!IS_RECOVERABLE_ERROR(status_code)) {
+            customDataObj->stream_status = status_code;
+            g_signal_emit(G_OBJECT(customDataObj->kvsSink), customDataObj->errSignalId, 0, status_code);
+        }
+    }
     return STATUS_SUCCESS;
 }
 
@@ -35,19 +48,29 @@ STATUS
 KvsSinkStreamCallbackProvider::droppedFrameReportHandler(UINT64 custom_data,
                                                          STREAM_HANDLE stream_handle,
                                                          UINT64 dropped_frame_timecode) {
-    // this is called in case of no permissions
-    //[21-06-2023 00:05:13:474.847 GMT] Reported droppedFrame callback for stream handle 140398523724768
     UNUSED_PARAM(custom_data);
     LOG_WARN("Reported droppedFrame callback for stream handle " << stream_handle << ". Dropped frame timecode in 100ns: " << dropped_frame_timecode);
+
     return STATUS_SUCCESS; // continue streaming
 }
+
+
+STATUS
+KvsSinkStreamCallbackProvider::droppedFragmentReportHandler(UINT64 custom_data,
+                                                            STREAM_HANDLE stream_handle,
+                                                            UINT64 dropped_fragment_timecode) {
+    UNUSED_PARAM(custom_data);
+    LOG_WARN("Reported droppedFrame callback for stream handle " << stream_handle << ". Dropped fragment timecode in 100ns: " << dropped_fragment_timecode);
+    return STATUS_SUCCESS; // continue streaming
+}
+
 
 STATUS
 KvsSinkStreamCallbackProvider::streamLatencyPressureHandler(UINT64 custom_data,
                                                             STREAM_HANDLE stream_handle,
                                                             UINT64 current_buffer_duration) {
     UNUSED_PARAM(custom_data);
-    LOG_DEBUG("Reported streamLatencyPressure callback for stream handle " << stream_handle << ". Current buffer duration in 100ns: " << current_buffer_duration); // this is being called in case of permissions
+    LOG_DEBUG("Reported streamLatencyPressure callback for stream handle " << stream_handle << ". Current buffer duration in 100ns: " << current_buffer_duration);
     return STATUS_SUCCESS;
 }
 
@@ -56,55 +79,20 @@ KvsSinkStreamCallbackProvider::streamClosedHandler(UINT64 custom_data,
                                                    STREAM_HANDLE stream_handle,
                                                    UPLOAD_HANDLE upload_handle) {
     UNUSED_PARAM(custom_data);
-    LOG_DEBUG("Reported streamClosed callback for stream handle " << stream_handle << ". Upload handle " << upload_handle);
+    LOG_INFO("Reported streamClosed callback for stream handle " << stream_handle << ". Upload handle " << upload_handle);
     return STATUS_SUCCESS;
 }
 
-STATUS KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler(UINT64 custom_data,
-                                  STREAM_HANDLE stream_handle,
-                                  UPLOAD_HANDLE upload_handle,
-                                  PFragmentAck fragment_ack) {
-    LOG_INFO("KvsSinkStreamCallbackProvider::fragmentAckReceivedHandler")
-    KvsSinkCustomData* customDataObj = reinterpret_cast<KvsSinkCustomData*>(custom_data);
+STATUS
+KvsSinkStreamCallbackProvider::fragmentAckHandler(UINT64 custom_data,
+                                                  STREAM_HANDLE stream_handle,
+                                                  UPLOAD_HANDLE upload_handle,
+                                                  PFragmentAck pFragmentAck) {
+    auto customDataObj = reinterpret_cast<KvsSinkCustomData*>(custom_data);
 
-    LOG_INFO("Reporting fragment ack received. Ack timecode " << fragment_ack->timestamp << "fragment_ack_type is " << fragment_ack->ackType);
-    LOG_INFO("Other details of pFragmentAck -  SequenceNumber - " << fragment_ack->sequenceNumber << " timestamp - " << fragment_ack->timestamp);
-    LOG_INFO("Yet another detail of pFragmentAck -  version - " << fragment_ack->version << " result - " << fragment_ack->result);
-    LOG_INFO("Send fragment number inside gstreamer signal");
-    std::string fragmentSequenceNumberStr = fragment_ack->sequenceNumber;
-    std::string fragmentAckType = std::to_string(fragment_ack->ackType);
-    LOG_INFO("Sending fragment number inside gstreamer signal as string");
-    g_signal_emit(G_OBJECT(customDataObj->kvsSink),
-                  customDataObj->kvs_sink_signals[SIGNAL_ON_FIRST_FRAGMENT],
-                  0,
-                  fragmentSequenceNumberStr.c_str(),
-                  fragmentAckType.c_str());
-    return STATUS_SUCCESS;
-}
-
-STATUS KvsSinkStreamCallbackProvider::droppedFragmentReportHandler(UINT64 custom_data,
-                                           STREAM_HANDLE stream_handle,
-                                           UINT64 timecode) {
-    LOG_INFO("KvsSinkStreamCallbackProvider::droppedFragmentReportHandler")
-    return STATUS_SUCCESS;
-}
-
-STATUS KvsSinkStreamCallbackProvider::streamDataAvailableHandler(UINT64 custom_data,
-                                         STREAM_HANDLE stream_handle,
-                                         PCHAR stream_name,
-                                         UPLOAD_HANDLE stream_upload_handle,
-                                         UINT64 duration_available,
-                                         UINT64 size_available) {
-    LOG_INFO("KvsSinkStreamCallbackProvider::streamDataAvailableHandler")
-    return STATUS_SUCCESS;
-}
-
-STATUS KvsSinkStreamCallbackProvider::streamReadyHandler(UINT64 custom_data, STREAM_HANDLE stream_handle) {
-    LOG_INFO("KvsSinkStreamCallbackProvider::streamReadyHandler")
-    return STATUS_SUCCESS;
-}
-
-STATUS KvsSinkStreamCallbackProvider::streamUnderflowReportHandler(UINT64 custom_data, STREAM_HANDLE stream_handle) {
-    LOG_INFO("KvsSinkStreamCallbackProvider::streamUnderflowReportHandler")
+    if(customDataObj != NULL && customDataObj->kvsSink != NULL && pFragmentAck != NULL && pFragmentAck->ackType == FRAGMENT_ACK_TYPE_PERSISTED) {
+        LOG_DEBUG("PersistedAck timestamp for " << customDataObj->kvsSink->stream_name << " is " << pFragmentAck->timestamp);
+        g_signal_emit(G_OBJECT(customDataObj->kvsSink), customDataObj->ackSignalId, 0, pFragmentAck->timestamp);
+    }
     return STATUS_SUCCESS;
 }

@@ -76,12 +76,6 @@ typedef enum _MediaType {
     AUDIO_ONLY
 } MediaType;
 
-enum {
-    SIGNAL_ON_FIRST_FRAGMENT = 0,
-    SIGNAL_ON_EOS,
-    LAST_SIGNAL
-};
-
 /**
  * GstKvsSink:
  *
@@ -107,6 +101,7 @@ struct _GstKvsSink {
     gboolean                    fragment_acks;
     gboolean                    restart_on_error;
     gboolean                    recalculate_metrics;
+    gboolean                    allow_create_stream;
     gboolean                    disable_buffer_clipping;
     guint                       framerate;
     guint                       avg_bandwidth_bps;
@@ -117,10 +112,12 @@ struct _GstKvsSink {
     gchar                       *track_name;
     gchar                       *access_key;
     gchar                       *secret_key;
+    gchar                       *session_token;
     gchar                       *aws_region;
     guint                       rotation_period;
     gchar                       *log_config_path;
     guint                       storage_size;
+    guint                       stop_stream_timeout;
     gchar                       *credential_file_path;
     GstStructure                *iot_certificate;
     GstStructure                *stream_tags;
@@ -139,6 +136,14 @@ struct _GstKvsSink {
 
 struct _GstKvsSinkClass {
     GstElementClass parent_class;
+    void (*sink_stream_underflow)          (STREAM_HANDLE stream_handle, gpointer user_data);
+    void (*sink_buffer_duration_overflow)  (STREAM_HANDLE stream_handle, UINT64 remainDuration, gpointer user_data);
+    void (*sink_stream_latency_pressure)   (STREAM_HANDLE stream_handle, UINT64 current_buffer_duration, gpointer user_data);
+    void (*sink_stale_connection)          (STREAM_HANDLE stream_handle, UINT64 last_buffering_ack, gpointer user_data);
+    void (*sink_dropped_frame)             (STREAM_HANDLE stream_handle, UINT64 dropped_frame_timecode, gpointer user_data);
+    void (*sink_dropped_fragment)          (STREAM_HANDLE stream_handle, UINT64 fragment_timecode, gpointer user_data);
+    void (*sink_fragment_ack)              (GstKvsSink *kvssink, gpointer user_data);
+    void (*sink_stream_error)              (GstKvsSink *kvssink, gpointer user_data);
 };
 
 GType gst_kvs_sink_get_type (void);
@@ -153,6 +158,7 @@ struct _KvsSinkCustomData {
             pts_base(0),
             media_type(VIDEO_ONLY),
             first_video_frame(true),
+            use_original_pts(false),
             frame_count(0),
             first_pts(GST_CLOCK_TIME_NONE),
             producer_start_time(GST_CLOCK_TIME_NONE) {}
@@ -160,9 +166,10 @@ struct _KvsSinkCustomData {
     std::shared_ptr<KinesisVideoStream> kinesis_video_stream;
 
     std::unordered_set<uint64_t> track_cpd_received;
-    GstKvsSink *kvsSink;
+    GstKvsSink *kvsSink = nullptr;
     MediaType media_type;
     bool first_video_frame;
+    bool use_original_pts;
     uint32_t frame_count;
 
     std::atomic_uint stream_status;
@@ -171,7 +178,8 @@ struct _KvsSinkCustomData {
     uint64_t pts_base;
     uint64_t first_pts;
     uint64_t producer_start_time;
-    guint *kvs_sink_signals;
+    guint errSignalId = 0;
+    guint ackSignalId = 0;
 };
 
 #endif /* __GST_KVS_SINK_H__ */
