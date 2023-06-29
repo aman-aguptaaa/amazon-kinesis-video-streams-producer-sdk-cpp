@@ -18,14 +18,13 @@ namespace com { namespace amazonaws { namespace kinesis { namespace video {
                         return streamUnderflowReportHandler;
                     }
 
-                    BufferDurationOverflowPressureFunc getBufferDurationOverFlowCallback() override {
+                    BufferDurationOverflowPressureFunc getBufferDurationOverflowPressureCallback() override {
                         return bufferDurationOverflowPressureHandler;
                     }
 
                     StreamLatencyPressureFunc getStreamLatencyPressureCallback() override {
                         return streamLatencyPressureHandler;
                     }
-
 
                     StreamConnectionStaleFunc getStreamConnectionStaleCallback() override {
                         return streamConnectionStaleHandler;
