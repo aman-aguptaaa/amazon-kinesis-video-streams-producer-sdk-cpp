@@ -1084,7 +1084,6 @@ gst_kvs_sink_handle_sink_event (GstCollectPads *pads,
         case GST_EVENT_CUSTOM_DOWNSTREAM: {
             const GstStructure *structure = gst_event_get_structure(event);
             std::string metadata_name, metadata_value;
-            gboolean persistent;
             bool is_persist;
 
             if (!gst_structure_has_name(structure, KVS_ADD_METADATA_G_STRUCT_NAME)) {
@@ -1093,8 +1092,7 @@ gst_kvs_sink_handle_sink_event (GstCollectPads *pads,
 
             LOG_INFO("received kvs-add-metadata event");
             if (NULL == gst_structure_get_string(structure, KVS_ADD_METADATA_NAME) ||
-                NULL == gst_structure_get_string(structure, KVS_ADD_METADATA_VALUE) ||
-                !gst_structure_get_boolean(structure, KVS_ADD_METADATA_PERSISTENT, &persistent)) {
+                NULL == gst_structure_get_string(structure, KVS_ADD_METADATA_VALUE)) {
 
                 LOG_WARN("Event structure contains invalid field: " << std::string(gst_structure_to_string (structure)));
                 goto CleanUp;
@@ -1102,7 +1100,7 @@ gst_kvs_sink_handle_sink_event (GstCollectPads *pads,
 
             metadata_name = std::string(gst_structure_get_string(structure, KVS_ADD_METADATA_NAME));
             metadata_value = std::string(gst_structure_get_string(structure, KVS_ADD_METADATA_VALUE));
-            is_persist = persistent;
+            is_persist = true;
 
             bool result = data->kinesis_video_stream->putFragmentMetadata(metadata_name, metadata_value, is_persist);
             if (!result) {
