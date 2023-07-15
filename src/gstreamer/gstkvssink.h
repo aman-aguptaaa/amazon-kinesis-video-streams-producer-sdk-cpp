@@ -161,7 +161,8 @@ struct _KvsSinkCustomData {
             use_original_pts(false),
             frame_count(0),
             first_pts(GST_CLOCK_TIME_NONE),
-            producer_start_time(GST_CLOCK_TIME_NONE) {}
+            producer_start_time(GST_CLOCK_TIME_NONE),
+            streamingStopped(false) {}
     std::unique_ptr<KinesisVideoProducer> kinesis_video_producer;
     std::shared_ptr<KinesisVideoStream> kinesis_video_stream;
 
@@ -177,6 +178,7 @@ struct _KvsSinkCustomData {
     uint64_t last_dts;
     uint64_t pts_base;
     uint64_t first_pts;
+    std::atomic<bool> streamingStopped;
     uint64_t producer_start_time;
     guint errSignalId = 0;
     guint ackSignalId = 0;
