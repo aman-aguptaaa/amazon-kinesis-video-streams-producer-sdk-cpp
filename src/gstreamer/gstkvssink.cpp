@@ -657,7 +657,7 @@ gst_kvs_sink_class_init(GstKvsSinkClass *klass) {
     gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_kvs_sink_release_pad);
 
     KVSSinkSignals::errSignalId = g_signal_new("stream-error", G_TYPE_FROM_CLASS(gobject_class), (GSignalFlags)(G_SIGNAL_RUN_LAST), G_STRUCT_OFFSET (GstKvsSinkClass, sink_stream_error), NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT64);
-    KVSSinkSignals::ackSignalId = g_signal_new("persisted-ack", G_TYPE_FROM_CLASS(gobject_class), (GSignalFlags)(G_SIGNAL_ACTION), G_STRUCT_OFFSET (GstKvsSinkClass, sink_fragment_ack), NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT64);
+    KVSSinkSignals::ackSignalId = g_signal_new("persisted-ack", G_TYPE_FROM_CLASS(gobject_class), (GSignalFlags)(G_SIGNAL_ACTION), G_STRUCT_OFFSET (GstKvsSinkClass, sink_fragment_ack), NULL, NULL, NULL, G_TYPE_NONE, 3, G_TYPE_INT, G_TYPE_STRING, G_TYPE_UINT64);
 
 }
 
